@@ -2,7 +2,7 @@ require 'pry'
 class TicTacToe
   WIN_COMBINATIONS  = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
 
-  attr_accessor :board, :token, :x_win, :o_win
+  attr_accessor :board
 
 
   def initialize
@@ -21,35 +21,23 @@ class TicTacToe
     input.to_i - 1
   end
 
-  def move(input_index, token = "X")
+  def move(input_index, token)
     board[input_index] = token
   end
 
   def position_taken?(input_index)
-    if (board[input_index] == " " || board[input_index] == "" || board[input_index]== nil)
-      return false
-    else
-      return true
-    end
+    board[input_index] != " "
   end
 
   def valid_move?(input_index)
-    if input_index >= 0 && input_index <= 8
-      if !position_taken?(input_index)
-        return true
-      else
-        return false
-      end
-    else
-      return false
-    end
+    input_index.between?(0,8) && !position_taken?(input_index)
   end
 
   def turn
     puts "Please enter position (1-9):"
     input = gets.strip
     input_to_index_return = input_to_index(input)
-    if valid_move?(input_to_index_return) == true
+    if valid_move?(input_to_index_return)
       move(input_to_index_return, current_player)
       display_board
     else
@@ -59,79 +47,38 @@ class TicTacToe
   end
 
   def turn_count
-    count = 0
-    board.each do |board_element|
-      if board_element == "X" || board_element == "O"
-        count +=1
-      end
-    end
-    count
+    board.count{|board_element| board_element != " "}
   end
 
   def current_player
-    if turn_count.even?
-      token = "X"
-    else
-      token = "O"
-    end
-    token
+    turn_count.even? ? "X" : "O"
   end
 
   def won?
-    o_indexes = []
-    x_indexes = []
-    board.each_with_index do |token, index|
-      o_indexes << index if token == "O"
-      x_indexes << index if token == "X"
+    WIN_COMBINATIONS.detect do |combination_array|
+      board[combination_array[0]] == board[combination_array[1]] && board[combination_array[1]] == board[combination_array[2]] && board[combination_array[0]] != " "
     end
-    WIN_COMBINATIONS.each do |combination_array|
-      self.o_win = combination_array.all? {|combination_element| o_indexes.include?(combination_element)}
-      return combination_array if self.o_win == true
-      self.x_win = combination_array.all? {|combination_element| x_indexes.include?(combination_element)}
-      return combination_array if self.x_win == true
-    end
-    false
   end
 
   def full?
-    return true if board.include?(" ") == false
+    return true if !board.include?(" ")
   end
 
   def draw?
-    if full? == true && won? == false
-      return true
-    else
-      return false
-    end
+    full? && !won?
   end
 
   def over?
-    if draw? == true
-      return true
-    elsif won? != false
-      return true
-    else
-      return false
-    end
+    won? || draw?
   end
 
   def winner
-    if won? != false
-      if current_player == "X"
-        return "O"
-      else
-        return "X"
-      end
-    else
-      nil
-    end
+      board[won?[0]] if won?
   end
 
   def play
-    latest_result = over?
-    until latest_result == true
+    until over?
       turn
-      latest_result = over?
     end
 
     if winner != nil
@@ -141,3 +88,6 @@ class TicTacToe
     end
   end
 end
+
+new_game = TicTacToe.new
+new_game.play
